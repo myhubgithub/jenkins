@@ -1,0 +1,30 @@
+node{
+    stage("Git checkout")
+    {
+        git credentialsId: 'git-credentials', url: 'https://github.com/myhubgithub/devops-junit.git'
+    }
+     stage("MVN Build & Test Stage")
+    {
+  
+        def mavenHome = tool name: 'maven-3',type: 'maven'
+        def mavenCMD = "${mavenHome}/bin/mvn"
+        sh "${mavenCMD} clean package"
+    }
+     stage("Docker Build stage")
+    {
+         sh 'sudo docker build -t myladoorinfotech/cicd-springboot:3.0 .'
+    }
+     stage("Docker Push stage")
+    {
+       withCredentials([string(credentialsId: 'docker-credentials', variable: 'dockerpassword')]) {
+    // some block
+         sh 'sudo docker login -u myladoorinfotech -p ${dockerpassword}'
+       }
+      sh 'sudo docker push myladoorinfotech/cicd-springboot:3.0' 
+    }
+     stage("Docker Run stage")
+    {
+         sh 'sudo docker run -p 9090:9090 myladoorinfotech/cicd-springboot:3.0' 
+    }
+   
+}
