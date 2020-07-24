@@ -12,24 +12,31 @@ node{
     }
      stage("Docker Build stage")
     {
-         sh "sudo docker build -t myladoorinfotech/cicd-springboot:${env.BUILD_NUMBER}.0 ."
+        def docker=tool name: 'docker', type: 'dockerTool'
+        def dockerCMD = "${docker}/bin/docker"
+         sh "sudo ${dockerCMD} build -t myladoorinfotech/cicd-springboot:${env.BUILD_NUMBER}.0 ."
     }
      stage("Docker Push stage")
     {
+         def docker=tool name: 'docker', type: 'dockerTool'
+        def dockerCMD = "${docker}/bin/docker"
        withCredentials([string(credentialsId: 'docker-credentials', variable: 'dockerpassword')]) {
     // some block
-         sh "sudo docker login -u myladoorinfotech -p ${dockerpassword}"
+         sh "sudo ${dockerCMD} login -u myladoorinfotech -p ${dockerpassword}"
        }
-      sh "sudo docker push myladoorinfotech/cicd-springboot:${env.BUILD_NUMBER}.0" 
+      sh "sudo ${dockerCMD} push myladoorinfotech/cicd-springboot:${env.BUILD_NUMBER}.0" 
     }
     
      stage('Push Image to PCF Server')
     {
+    
         sh "cf push myladoorinfotech/cicd-springboot:${env.BUILD_NUMBER}.0 --docker-image myladoorinfotech/cicd-springboot:${env.BUILD_NUMBER}.0"
     }
      stage("Docker Run stage")
     {
-         sh "sudo docker run -p 9090:9090 myladoorinfotech/cicd-springboot:${env.BUILD_NUMBER}.0"
+               def docker=tool name: 'docker', type: 'dockerTool'
+        def dockerCMD = "${docker}/bin/docker"
+         sh "sudo ${dockerCMD} run -d -p 9090:9090  myladoorinfotech/cicd-springboot:${env.BUILD_NUMBER}.0"
     }
    
    
